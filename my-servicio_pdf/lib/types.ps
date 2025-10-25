@@ -1,0 +1,24 @@
+export interface Aprendiz {
+  id: string;
+  nombre: string;
+  tipo_documento: 'TI' | 'CC' | 'CE' | 'Otro';
+  numero_documento: string;
+  programa_formacion: string;
+  ficha_caracterizacion: string;
+  centro_formacion: string;
+  menor_edad: boolean;
+  fecha_matricula: string;
+}
+
+export interface DatosTutor {
+  tipo_documento: string;
+  numero_documento: string;
+  parentesco: string;
+}
+
+export interface FormData {
+  aprendiz: Aprendiz;
+  tutor?: DatosTutor; // Solo si es menor de edad
+  firma_aprendiz: string; // base64
+  firma_tutor?: string; // base64, solo si es menor
+}

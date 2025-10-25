@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build and Lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: 'my-servicio_pdf/package.json'
+
+      - name: Debug - List workspace contents
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "\nRepository contents:"
+          ls -la
+          echo "\nmy-servicio_pdf contents:"
+          ls -la my-servicio_pdf
+          echo "\npackage.json contents:"
+          cat my-servicio_pdf/package.json
+
+      - name: Install dependencies
+        run: |
+          cd my-servicio_pdf
+          npm ci || npm install
+
+      - name: Build
+        run: |
+          cd my-servicio_pdf
+          npm run build
+
+      - name: Lint (if configured)
+        if: success()
+        run: |
+          cd my-servicio_pdf
+          if npm run | grep -q "lint"; then
+            npm run lint
+          else
+            echo "No lint script defined"
+          fi
+
+      - name: Upload build artifact (optional)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: my-servicio_pdf/.next/
