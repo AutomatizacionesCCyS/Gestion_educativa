@@ -1,26 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { PDFGenerator } from '../../../lib/pdfGenerator'
+import { NextRequest, NextResponse } from 'next/server';
+import { PDFGenerator } from '../../../lib/pdfGenerator';
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.json()
+    const formData = await request.json();
     
-    // Generar PDF
-    const pdfBytes = await PDFGenerator.createActaCompromiso(formData)
+    console.log('📨 Datos recibidos en API:', formData);
+
+    const pdfBytes = await PDFGenerator.createPdf(formData);
+
+    // Crear respuesta con el PDF - CORREGIDO: usar Buffer.from()
+    const response = new NextResponse(Buffer.from(pdfBytes));
     
-    // Devolver como respuesta
-    return new NextResponse(pdfBytes, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="acta-compromiso.pdf"',
-      },
-    })
+    // Configurar headers para descarga
+    response.headers.set('Content-Type', 'application/pdf');
+    
+    const fileName = formData.formato === 'tratamiento'
+      ? `tratamiento-datos-${formData.aprendiz.nombre}.pdf`
+      : `acta-compromiso-${formData.aprendiz.nombre}.pdf`;
+    
+    response.headers.set('Content-Disposition', `attachment; filename="${fileName}"`);
+    
+    console.log(`✅ PDF generado exitosamente: ${fileName}`);
+    return response;
+
   } catch (error) {
-    console.error('Error generating PDF:', error)
+    console.error('❌ Error en API:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Error generando PDF: ' + (error instanceof Error ? error.message : 'Error desconocido') },
       { status: 500 }
-    )
+    );
   }
+}
+
+// Opcional: agregar otros métodos HTTP si son necesarios
+export async function GET() {
+  return NextResponse.json({ message: 'Método GET no disponible. Use POST.' }, { status: 405 });
 }

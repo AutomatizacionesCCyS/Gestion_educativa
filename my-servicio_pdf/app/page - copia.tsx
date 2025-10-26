@@ -16,10 +16,8 @@ interface Aprendiz {
 }
 
 interface DatosTutor {
-  nombre: string; // ✅ NUEVO
   tipo_documento: string;
   numero_documento: string;
-  lugar_expedicion: string; // ✅ NUEVO
   parentesco: string;
   email: string;
   direccion: string;
@@ -27,10 +25,8 @@ interface DatosTutor {
 
 export default function Home() {
   const [tutorData, setTutorData] = useState<DatosTutor>({
-    nombre: 'JUAN CARLOS GÓMEZ', // ✅ NUEVO
     tipo_documento: 'CC',
     numero_documento: '987654321',
-    lugar_expedicion: 'Popayán', // ✅ NUEVO
     parentesco: 'Padre',
     email: 'tutor@example.com',
     direccion: 'Calle 123 # 45-67, Popayán, Cauca'
@@ -42,11 +38,11 @@ export default function Home() {
 
   // Función para determinar automáticamente si es menor de edad
   const determinarMenorEdad = (tipoDocumento: 'TI' | 'CC' | 'CE' | 'Otro'): boolean => {
-    return tipoDocumento === 'TI';
+    return tipoDocumento === 'TI'; // Solo TI es menor de edad
   }
 
   // DATOS SIMULADOS DEL APRENDIZ
-  const tipoDocumentoSimulado: 'TI' | 'CC' | 'CE' | 'Otro' = 'TI';
+  const tipoDocumentoSimulado: 'TI' | 'CC' | 'CE' | 'Otro' = 'TI'; // CAMBIA AQUÍ para probar
   const esMenorEdad = determinarMenorEdad(tipoDocumentoSimulado);
 
   const datosAprendiz: Aprendiz = {
@@ -63,69 +59,70 @@ export default function Home() {
   }
 
   const descargarPDF = async (tipo: 'acta' | 'tratamiento') => {
-    if (!firmaAprendiz) {
-      alert('Debe agregar su firma digital')
-      return
-    }
-
-    if (tipo === 'tratamiento' && !firmaTutor) {
-      alert('Debe agregar la firma del tutor')
-      return
-    }
-
-    setGenerando(true)
-
-    try {
-      const formData = {
-        aprendiz: datosAprendiz,
-        tutor: datosAprendiz.menor_edad ? tutorData : undefined,
-        firma_aprendiz: firmaAprendiz,
-        firma_tutor: datosAprendiz.menor_edad ? firmaTutor : undefined,
-        formato: tipo
-      }
-
-      console.log(`Generando ${tipo}...`, formData)
-      
-      const response = await fetch('/api/generate-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.style.display = 'none'
-        a.href = url
-        
-        const nombreArchivo = tipo === 'tratamiento' 
-          ? `tratamiento-datos-${datosAprendiz.nombre}.pdf`
-          : `acta-compromiso-${datosAprendiz.nombre}.pdf`
-        
-        a.download = nombreArchivo
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        
-        alert(tipo === 'tratamiento' 
-          ? 'Formato de Tratamiento de Datos generado y descargado exitosamente!' 
-          : 'Acta de Compromiso generada y descargada exitosamente!'
-        )
-      } else {
-        const errorText = await response.text()
-        throw new Error(`Error al generar PDF: ${errorText}`)
-      }
-
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Error al generar el PDF: ' + error.message)
-    } finally {
-      setGenerando(false)
-    }
+  if (!firmaAprendiz) {
+    alert('Debe agregar su firma digital')
+    return
   }
+
+  if (tipo === 'tratamiento' && !firmaTutor) {
+    alert('Debe agregar la firma del tutor')
+    return
+  }
+
+  setGenerando(true)
+
+  try {
+    const formData = {
+      aprendiz: datosAprendiz,
+      tutor: datosAprendiz.menor_edad ? tutorData : undefined,
+      firma_aprendiz: firmaAprendiz,
+      firma_tutor: datosAprendiz.menor_edad ? firmaTutor : undefined,
+      formato: tipo
+    }
+
+    console.log(`Generando ${tipo}...`, formData)
+    
+    const response = await fetch('/api/generate-pdf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    })
+
+    if (response.ok) {
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      
+      const nombreArchivo = tipo === 'tratamiento' 
+        ? `tratamiento-datos-${datosAprendiz.nombre}.pdf`
+        : `acta-compromiso-${datosAprendiz.nombre}.pdf`
+      
+      a.download = nombreArchivo
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      
+      alert(tipo === 'tratamiento' 
+        ? 'Formato de Tratamiento de Datos generado y descargado exitosamente!' 
+        : 'Acta de Compromiso generada y descargada exitosamente!'
+      )
+    } else {
+      // CORREGIR ESTA PARTE - hacer la función async
+      const errorText = await response.text()
+      throw new Error(`Error al generar PDF: ${errorText}`)
+    }
+
+  } catch (error) {
+    console.error('Error:', error)
+    alert('Error al generar el PDF: ' + error.message)
+  } finally {
+    setGenerando(false)
+  }
+}
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
@@ -189,49 +186,6 @@ export default function Home() {
             👨‍👩‍👧‍👦 Datos para Formato de Tratamiento de Datos (Menor de Edad)
           </h3>
           
-          {/* NUEVOS CAMPOS AGREGADOS */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#2c3e50' }}>
-                Nombre Completo Tutor:
-              </label>
-              <input 
-                type="text" 
-                value={tutorData.nombre}
-                onChange={(e) => setTutorData({...tutorData, nombre: e.target.value})}
-                style={{ 
-                  width: '100%', 
-                  padding: '10px', 
-                  border: '2px solid #bdc3c7',
-                  borderRadius: '5px',
-                  backgroundColor: 'white',
-                  fontSize: '14px'
-                }}
-                placeholder="JUAN CARLOS GÓMEZ"
-              />
-            </div>
-            
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#2c3e50' }}>
-                Lugar de Expedición:
-              </label>
-              <input 
-                type="text" 
-                value={tutorData.lugar_expedicion}
-                onChange={(e) => setTutorData({...tutorData, lugar_expedicion: e.target.value})}
-                style={{ 
-                  width: '100%', 
-                  padding: '10px', 
-                  border: '2px solid #bdc3c7',
-                  borderRadius: '5px',
-                  backgroundColor: 'white',
-                  fontSize: '14px'
-                }}
-                placeholder="Popayán"
-              />
-            </div>
-          </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#2c3e50' }}>
